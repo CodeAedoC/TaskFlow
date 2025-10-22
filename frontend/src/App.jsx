@@ -4,37 +4,52 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext.jsx";
-import Login from "./components/Auth/Login.jsx";
-import Register from "./components/Auth/Register.jsx";
-import Dashboard from "./components/Dashboard/Dashboard.jsx";
-import PrivateRoute from "./components/Layout/PrivateRoute.jsx";
-import "./App.css";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { AuthProvider } from "./context/AuthContext";
+import { TaskProvider } from "./context/TaskContext";
+import Login from "./components/Auth/Login";
+import Register from "./components/Auth/Register";
+import Dashboard from "./components/Dashboard/Dashboard";
+import PrivateRoute from "./components/Layout/PrivateRoute";
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Routes>
-          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Protected routes */}
           <Route
             path="/dashboard"
             element={
               <PrivateRoute>
-                <Dashboard />
+                <TaskProvider>
+                  <Dashboard />
+                </TaskProvider>
               </PrivateRoute>
             }
           />
 
-          {/* Default redirect */}
           <Route path="/" element={<Navigate to="/login" />} />
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </AuthProvider>
+
+      {/* Toast Notifications */}
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="dark"
+      />
     </Router>
   );
 }
