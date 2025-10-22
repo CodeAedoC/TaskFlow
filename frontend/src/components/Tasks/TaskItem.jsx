@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useTask } from "../../context/TaskContext";
 import { format } from "date-fns";
 import TaskForm from "./TaskForm";
+import CommentsSection from "./CommentsSection";
 
 function TaskItem({ task, index }) {
   const { updateTask, deleteTask } = useTask();
   const [showEditForm, setShowEditForm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   const statusColors = {
     pending: "bg-slate-500/10 text-slate-400 border-slate-500/20",
@@ -53,75 +55,60 @@ function TaskItem({ task, index }) {
         style={{ animationDelay: `${index * 0.05}s` }}
       >
         <div className="flex items-start gap-4">
-          <button onClick={handleStatusToggle} className="flex-shrink-0 mt-1">
-            <div
-              className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
-                task.status === "completed"
-                  ? "bg-teal-500 border-teal-500"
-                  : "border-slate-700 hover:border-teal-500"
-              }`}
-            >
-              {task.status === "completed" && (
-                <svg
-                  className="w-4 h-4 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={3}
-                    d="M5 13l4 4L19 7"
-                  />
+          {/* Checkbox */}
+          <button
+            onClick={handleStatusToggle}
+            className="flex-shrink-0 mt-1"
+          >
+            <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
+              task.status === 'completed'
+                ? 'bg-teal-500 border-teal-500'
+                : 'border-slate-700 hover:border-teal-500'
+            }`}>
+              {task.status === 'completed' && (
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                 </svg>
               )}
             </div>
           </button>
 
+          {/* Content */}
           <div className="flex-1 min-w-0">
-            <h3
-              className={`text-lg font-semibold mb-2 ${
-                task.status === "completed"
-                  ? "text-slate-500 line-through"
-                  : "text-white"
-              }`}
-            >
+            <h3 className={`text-lg font-semibold mb-2 ${
+              task.status === 'completed' ? 'text-slate-500 line-through' : 'text-white'
+            }`}>
               {task.title}
             </h3>
-
+            
             {task.description && (
               <p className="text-slate-400 text-sm mb-3">{task.description}</p>
             )}
 
             <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`px-3 py-1 rounded-lg text-xs font-medium border ${
-                  statusColors[task.status]
-                }`}
-              >
-                {task.status.replace("-", " ")}
+              {/* Status Badge */}
+              <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${statusColors[task.status]}`}>
+                {task.status.replace('-', ' ')}
               </span>
 
-              <span
-                className={`px-3 py-1 rounded-lg text-xs font-medium border ${
-                  priorityColors[task.priority]
-                }`}
-              >
+              {/* Priority Badge */}
+              <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${priorityColors[task.priority]}`}>
                 {task.priority}
               </span>
+
+              {/* Project Badge */}
               {task.project?.name && (
-                <span
+                <span 
                   className="px-3 py-1 rounded-lg text-xs font-medium border flex items-center gap-1.5"
-                  style={{
-                    backgroundColor: `${task.project.color || "#14b8a6"}10`,
-                    color: task.project.color || "#14b8a6",
-                    borderColor: `${task.project.color || "#14b8a6"}30`,
+                  style={{ 
+                    backgroundColor: `${task.project.color || '#14b8a6'}10`,
+                    color: task.project.color || '#14b8a6',
+                    borderColor: `${task.project.color || '#14b8a6'}30`
                   }}
                 >
-                  <span
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: task.project.color || "#14b8a6" }}
+                  <span 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: task.project.color || '#14b8a6' }}
                   />
                   {task.project.name}
                 </span>
@@ -130,23 +117,29 @@ function TaskItem({ task, index }) {
               {/* Due Date */}
               {task.dueDate && (
                 <span className="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/50 text-slate-400 border border-slate-700/50 flex items-center gap-1">
-                  <svg
-                    className="w-3 h-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                  {format(new Date(task.dueDate), "MMM dd, yyyy")}
+                  {format(new Date(task.dueDate), 'MMM dd, yyyy')}
                 </span>
               )}
+
+              {/* NEW: Comments Button */}
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className="px-3 py-1 rounded-lg text-xs font-medium bg-slate-800/50 text-slate-400 border border-slate-700/50 hover:border-teal-500/50 hover:text-teal-400 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                Comments
+              </button>
             </div>
+
+            {/* NEW: Comments Section */}
+            {showComments && (
+              <CommentsSection taskId={task._id} />
+            )}
           </div>
 
           {/* Actions */}
@@ -155,18 +148,8 @@ function TaskItem({ task, index }) {
               onClick={() => setShowEditForm(true)}
               className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-teal-400 transition-colors"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
               </svg>
             </button>
             <button
@@ -174,18 +157,8 @@ function TaskItem({ task, index }) {
               disabled={isDeleting}
               className="p-2 hover:bg-red-500/10 rounded-lg text-slate-400 hover:text-red-400 transition-colors disabled:opacity-50"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             </button>
           </div>
@@ -194,7 +167,10 @@ function TaskItem({ task, index }) {
 
       {/* Edit Form Modal */}
       {showEditForm && (
-        <TaskForm task={task} onClose={() => setShowEditForm(false)} />
+        <TaskForm
+          task={task}
+          onClose={() => setShowEditForm(false)}
+        />
       )}
     </>
   );

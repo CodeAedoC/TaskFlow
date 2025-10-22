@@ -53,4 +53,11 @@ export const projectsAPI = {
   removeMember: (id, userId) => api.delete(`/projects/${id}/members/${userId}`),
 };
 
+export const commentsAPI = {
+  getComments: (taskId) => api.get(`/comments/task/${taskId}`),
+  createComment: (data) => api.post("/comments", data),
+  updateComment: (id, data) => api.put(`/comments/${id}`, data),
+  deleteComment: (id) => api.delete(`/comments/${id}`),
+};
+
 export default api;

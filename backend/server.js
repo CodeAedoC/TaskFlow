@@ -7,6 +7,7 @@ import connectDB from "./config/db.js";
 import authRoutes from "./routes/auth.routes.js";
 import taskRoutes from "./routes/tasks.routes.js";
 import projectRoutes from "./routes/projects.routes.js";
+import commentRoutes from "./routes/comments.routes.js"; // NEW
 
 dotenv.config();
 
@@ -30,7 +31,8 @@ connectDB();
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/tasks", taskRoutes);
-app.use("/api/projects", projectRoutes); // NEW
+app.use("/api/projects", projectRoutes);
+app.use("/api/comments", commentRoutes); // NEW
 
 // Socket.io
 const userSockets = new Map();
@@ -54,13 +56,25 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("task:deleted", data);
   });
 
-  // NEW: Project events
   socket.on("project:created", (data) => {
     socket.broadcast.emit("project:created", data);
   });
 
   socket.on("project:updated", (data) => {
     socket.broadcast.emit("project:updated", data);
+  });
+
+  // NEW: Comment events
+  socket.on("comment:created", (data) => {
+    socket.broadcast.emit("comment:created", data);
+  });
+
+  socket.on("comment:updated", (data) => {
+    socket.broadcast.emit("comment:updated", data);
+  });
+
+  socket.on("comment:deleted", (data) => {
+    socket.broadcast.emit("comment:deleted", data);
   });
 
   socket.on("disconnect", () => {

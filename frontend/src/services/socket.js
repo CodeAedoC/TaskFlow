@@ -34,6 +34,7 @@ class SocketService {
     }
   }
 
+  // Task events
   emitTaskCreated(task) {
     if (this.socket) {
       this.socket.emit("task:created", task);
@@ -67,6 +68,43 @@ class SocketService {
   onTaskDeleted(callback) {
     if (this.socket) {
       this.socket.on("task:deleted", callback);
+    }
+  }
+
+  // Comment events - NEW
+  emitCommentCreated(comment) {
+    if (this.socket) {
+      this.socket.emit("comment:created", comment);
+    }
+  }
+
+  emitCommentUpdated(comment) {
+    if (this.socket) {
+      this.socket.emit("comment:updated", comment);
+    }
+  }
+
+  emitCommentDeleted(commentId) {
+    if (this.socket) {
+      this.socket.emit("comment:deleted", commentId);
+    }
+  }
+
+  onCommentCreated(callback) {
+    if (this.socket) {
+      this.socket.on("comment:created", callback);
+    }
+  }
+
+  onCommentUpdated(callback) {
+    if (this.socket) {
+      this.socket.on("comment:updated", callback);
+    }
+  }
+
+  onCommentDeleted(callback) {
+    if (this.socket) {
+      this.socket.on("comment:deleted", callback);
     }
   }
 }
