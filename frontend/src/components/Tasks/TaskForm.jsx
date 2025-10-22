@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useTask } from "../../context/TaskContext";
+import { useProject } from "../../context/ProjectContext";
 
 function TaskForm({ task, onClose }) {
   const { createTask, updateTask } = useTask();
+  const { projects } = useProject();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     status: "pending",
     priority: "medium",
     dueDate: "",
+    project: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -23,6 +26,7 @@ function TaskForm({ task, onClose }) {
         dueDate: task.dueDate
           ? new Date(task.dueDate).toISOString().split("T")[0]
           : "",
+        project: task.project?._id || "",
       });
     }
   }, [task]);
@@ -48,8 +52,7 @@ function TaskForm({ task, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 animate-slide-up">
-        {/* Header */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">
             {task ? "Edit Task" : "Create New Task"}
@@ -74,16 +77,13 @@ function TaskForm({ task, onClose }) {
           </button>
         </div>
 
-        {/* Error */}
         {error && (
           <div className="mb-4 bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Title */}
           <div>
             <label
               htmlFor="title"
@@ -104,7 +104,6 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
-          {/* Description */}
           <div>
             <label
               htmlFor="description"
@@ -124,7 +123,30 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
-          {/* Status & Priority */}
+          <div>
+            <label
+              htmlFor="project"
+              className="block text-sm font-semibold text-slate-300 mb-2"
+            >
+              Project
+            </label>
+            <select
+              id="project"
+              value={formData.project}
+              onChange={(e) =>
+                setFormData({ ...formData, project: e.target.value })
+              }
+              className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
+            >
+              <option value="">No Project</option>
+              {projects.map((project) => (
+                <option key={project._id} value={project._id}>
+                  {project.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
@@ -169,7 +191,6 @@ function TaskForm({ task, onClose }) {
             </div>
           </div>
 
-          {/* Due Date */}
           <div>
             <label
               htmlFor="dueDate"
@@ -188,7 +209,6 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
-          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

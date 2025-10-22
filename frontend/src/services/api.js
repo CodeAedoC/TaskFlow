@@ -42,4 +42,15 @@ export const tasksAPI = {
   deleteTask: (id) => api.delete(`/tasks/${id}`),
 };
 
+export const projectsAPI = {
+  getProjects: () => api.get("/projects"),
+  getProject: (id) => api.get(`/projects/${id}`),
+  createProject: (data) => api.post("/projects", data),
+  updateProject: (id, data) => api.put(`/projects/${id}`, data),
+  deleteProject: (id) => api.delete(`/projects/${id}`),
+  getProjectStatistics: (id) => api.get(`/projects/${id}/statistics`),
+  addMember: (id, userId) => api.post(`/projects/${id}/members`, { userId }),
+  removeMember: (id, userId) => api.delete(`/projects/${id}/members/${userId}`),
+};
+
 export default api;

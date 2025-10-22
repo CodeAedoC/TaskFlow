@@ -7,6 +7,7 @@ import {
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
+import { ProjectProvider } from "./context/ProjectContext";
 import { TaskProvider } from "./context/TaskContext";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
@@ -25,9 +26,11 @@ function App() {
             path="/dashboard"
             element={
               <PrivateRoute>
-                <TaskProvider>
-                  <Dashboard />
-                </TaskProvider>
+                <ProjectProvider>
+                  <TaskProvider>
+                    <Dashboard />
+                  </TaskProvider>
+                </ProjectProvider>
               </PrivateRoute>
             }
           />
@@ -37,7 +40,6 @@ function App() {
         </Routes>
       </AuthProvider>
 
-      {/* Toast Notifications */}
       <ToastContainer
         position="top-right"
         autoClose={3000}

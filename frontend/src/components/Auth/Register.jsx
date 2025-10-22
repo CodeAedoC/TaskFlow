@@ -63,7 +63,6 @@ function Register() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
-      {/* Left Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 items-center justify-center p-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-mesh-gradient opacity-60"></div>
         <div className="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.05)_1px,transparent_1px),linear-gradient(to_right,rgba(20,184,166,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
@@ -174,7 +173,6 @@ function Register() {
         <div className="absolute bottom-10 right-10 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl"></div>
       </div>
 
-      {/* Right Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8 relative z-10">
         <div className="w-full max-w-md animate-fade-in-up">
           <div className="mb-10">

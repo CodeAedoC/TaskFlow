@@ -53,7 +53,6 @@ function TaskItem({ task, index }) {
         style={{ animationDelay: `${index * 0.05}s` }}
       >
         <div className="flex items-start gap-4">
-          {/* Checkbox */}
           <button onClick={handleStatusToggle} className="flex-shrink-0 mt-1">
             <div
               className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-all ${
@@ -80,7 +79,6 @@ function TaskItem({ task, index }) {
             </div>
           </button>
 
-          {/* Content */}
           <div className="flex-1 min-w-0">
             <h3
               className={`text-lg font-semibold mb-2 ${
@@ -97,7 +95,6 @@ function TaskItem({ task, index }) {
             )}
 
             <div className="flex flex-wrap items-center gap-2">
-              {/* Status Badge */}
               <span
                 className={`px-3 py-1 rounded-lg text-xs font-medium border ${
                   statusColors[task.status]
@@ -106,7 +103,6 @@ function TaskItem({ task, index }) {
                 {task.status.replace("-", " ")}
               </span>
 
-              {/* Priority Badge */}
               <span
                 className={`px-3 py-1 rounded-lg text-xs font-medium border ${
                   priorityColors[task.priority]
@@ -114,6 +110,22 @@ function TaskItem({ task, index }) {
               >
                 {task.priority}
               </span>
+              {task.project?.name && (
+                <span
+                  className="px-3 py-1 rounded-lg text-xs font-medium border flex items-center gap-1.5"
+                  style={{
+                    backgroundColor: `${task.project.color || "#14b8a6"}10`,
+                    color: task.project.color || "#14b8a6",
+                    borderColor: `${task.project.color || "#14b8a6"}30`,
+                  }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: task.project.color || "#14b8a6" }}
+                  />
+                  {task.project.name}
+                </span>
+              )}
 
               {/* Due Date */}
               {task.dueDate && (

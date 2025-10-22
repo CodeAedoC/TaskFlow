@@ -7,12 +7,13 @@ const router = express.Router();
 
 router.get("/", authenticate, async (req, res) => {
   try {
-    const { status, priority, search } = req.query;
+    const { status, priority, search, project } = req.query;
 
-    let query = { user: req.userId }; 
+    let query = { user: req.userId };
 
     if (status) query.status = status;
     if (priority) query.priority = priority;
+    if (project) query.project = project; 
 
     if (search) {
       query.$or = [
@@ -21,7 +22,10 @@ router.get("/", authenticate, async (req, res) => {
       ];
     }
 
-    const tasks = await Task.find(query).sort({ createdAt: -1 });
+    const tasks = await Task.find(query)
+      .populate("project", "name color") 
+      .populate("assignedTo", "name email")
+      .sort({ createdAt: -1 });
 
     res.json(tasks);
   } catch (error) {

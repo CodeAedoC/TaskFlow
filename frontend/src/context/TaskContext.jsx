@@ -7,7 +7,6 @@ import {
 } from "react";
 import { tasksAPI } from "../services/api";
 import socketService from "../services/socket";
-import { toast } from "react-toastify";
 
 const TaskContext = createContext();
 
@@ -27,6 +26,7 @@ export const TaskProvider = ({ children }) => {
     status: "",
     priority: "",
     search: "",
+    project: "", 
   });
 
   const fetchTasks = useCallback(async () => {
@@ -55,7 +55,6 @@ export const TaskProvider = ({ children }) => {
     fetchStatistics();
   }, [fetchTasks]);
 
-  // Real-time updates
   useEffect(() => {
     socketService.onTaskCreated((task) => {
       setTasks((prev) => [task, ...prev]);

@@ -19,90 +19,38 @@ function Statistics({ statistics }) {
     {
       label: "Total Tasks",
       value: statistics.total,
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-          />
-        </svg>
-      ),
-      color: "from-blue-500 to-cyan-500",
+      icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2",
+      gradient: "from-blue-500 to-cyan-500",
       bgColor: "bg-blue-500/10",
       borderColor: "border-blue-500/20",
+      iconColor: "text-blue-400",
     },
     {
       label: "Completed",
       value: statistics.byStatus.completed,
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: "from-emerald-500 to-teal-500",
+      icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z",
+      gradient: "from-emerald-500 to-teal-500",
       bgColor: "bg-emerald-500/10",
       borderColor: "border-emerald-500/20",
+      iconColor: "text-emerald-400",
     },
     {
       label: "In Progress",
       value: statistics.byStatus.inProgress,
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M13 10V3L4 14h7v7l9-11h-7z"
-          />
-        </svg>
-      ),
-      color: "from-yellow-500 to-orange-500",
+      icon: "M13 10V3L4 14h7v7l9-11h-7z",
+      gradient: "from-yellow-500 to-orange-500",
       bgColor: "bg-yellow-500/10",
       borderColor: "border-yellow-500/20",
+      iconColor: "text-yellow-400",
     },
     {
       label: "Pending",
       value: statistics.byStatus.pending,
-      icon: (
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-      ),
-      color: "from-slate-500 to-slate-600",
+      icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
+      gradient: "from-slate-500 to-slate-600",
       bgColor: "bg-slate-500/10",
       borderColor: "border-slate-500/20",
+      iconColor: "text-slate-400",
     },
   ];
 
@@ -116,13 +64,21 @@ function Statistics({ statistics }) {
         >
           <div className="flex items-center justify-between mb-4">
             <div
-              className={`p-2 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}
+              className={`p-3 rounded-lg ${stat.bgColor} border ${stat.borderColor}`}
             >
-              <div
-                className={`bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`}
+              <svg
+                className={`w-6 h-6 ${stat.iconColor}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
               >
-                {stat.icon}
-              </div>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d={stat.icon}
+                />
+              </svg>
             </div>
             <div className="text-right">
               <div className="text-3xl font-bold text-white group-hover:scale-110 transition-transform">

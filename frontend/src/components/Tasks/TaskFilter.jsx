@@ -5,7 +5,6 @@ function TaskFilter() {
 
   return (
     <div className="flex flex-wrap gap-3">
-      {/* Status Filter */}
       <select
         value={filters.status}
         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -17,7 +16,6 @@ function TaskFilter() {
         <option value="completed">Completed</option>
       </select>
 
-      {/* Priority Filter */}
       <select
         value={filters.priority}
         onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
@@ -29,7 +27,6 @@ function TaskFilter() {
         <option value="high">High</option>
       </select>
 
-      {/* Search */}
       <div className="relative flex-1 min-w-[200px]">
         <input
           type="text"

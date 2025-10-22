@@ -45,10 +45,8 @@ function Login() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
-      {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center p-8 relative z-10">
         <div className="w-full max-w-md animate-fade-in-up">
-          {/* Header */}
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-teal-500/50 animate-glow">
@@ -73,8 +71,6 @@ function Login() {
               Sign in to continue your workflow
             </p>
           </div>
-
-          {/* Error */}
           {error && (
             <div className="mb-6 bg-red-500/10 border-l-4 border-red-500 p-4 rounded-r-lg backdrop-blur-sm">
               <p className="text-red-400 text-sm font-medium flex items-center gap-2">
@@ -93,10 +89,7 @@ function Login() {
               </p>
             </div>
           )}
-
-          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email */}
             <div>
               <label
                 htmlFor="email"
@@ -115,8 +108,6 @@ function Login() {
                 required
               />
             </div>
-
-            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -178,8 +169,6 @@ function Login() {
                 </button>
               </div>
             </div>
-
-            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -213,8 +202,6 @@ function Login() {
               )}
             </button>
           </form>
-
-          {/* Footer */}
           <p className="mt-8 text-center text-slate-400">
             Don't have an account?{" "}
             <Link
@@ -226,16 +213,11 @@ function Login() {
           </p>
         </div>
       </div>
-
-      {/* Right Side - Visual */}
       <div className="hidden lg:flex flex-1 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 items-center justify-center p-12 relative overflow-hidden">
-        {/* Gradient Mesh Background */}
         <div className="absolute inset-0 bg-mesh-gradient opacity-60"></div>
 
-        {/* Animated Grid */}
         <div className="absolute inset-0 bg-[linear-gradient(rgba(20,184,166,0.05)_1px,transparent_1px),linear-gradient(to_right,rgba(20,184,166,0.05)_1px,transparent_1px)] bg-[size:4rem_4rem]"></div>
 
-        {/* Content */}
         <div className="relative z-10 max-w-lg">
           <div className="mb-8 animate-slide-in-right">
             <div className="inline-block p-3 bg-teal-500/10 rounded-2xl mb-6 backdrop-blur-sm border border-teal-500/20">
@@ -264,7 +246,6 @@ function Login() {
             </p>
           </div>
 
-          {/* Feature Pills */}
           <div
             className="flex flex-wrap gap-3 animate-slide-in-right"
             style={{ animationDelay: "0.2s" }}
@@ -281,7 +262,6 @@ function Login() {
           </div>
         </div>
 
-        {/* Decorative Elements */}
         <div className="absolute top-10 right-10 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl"></div>
         <div className="absolute bottom-10 left-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
       </div>
