@@ -28,13 +28,15 @@ api.interceptors.response.use(
   }
 );
 
+// Auth API
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
   getCurrentUser: () => api.get("/auth/me"),
-  searchUsers: (query) => api.get("/auth/search", { params: { q: query } }), // NEW
+  searchUsers: (query) => api.get("/auth/search", { params: { q: query } }),
 };
 
+// Tasks API
 export const tasksAPI = {
   getTasks: (params) => api.get("/tasks", { params }),
   getStatistics: () => api.get("/tasks/statistics"),
@@ -43,6 +45,7 @@ export const tasksAPI = {
   deleteTask: (id) => api.delete(`/tasks/${id}`),
 };
 
+// Projects API
 export const projectsAPI = {
   getProjects: () => api.get("/projects"),
   getProject: (id) => api.get(`/projects/${id}`),
@@ -54,11 +57,21 @@ export const projectsAPI = {
   removeMember: (id, userId) => api.delete(`/projects/${id}/members/${userId}`),
 };
 
+// Comments API
 export const commentsAPI = {
   getComments: (taskId) => api.get(`/comments/task/${taskId}`),
   createComment: (data) => api.post("/comments", data),
   updateComment: (id, data) => api.put(`/comments/${id}`, data),
   deleteComment: (id) => api.delete(`/comments/${id}`),
+};
+
+// Notifications API
+export const notificationsAPI = {
+  getNotifications: (params) => api.get("/notifications", { params }),
+  markAsRead: (id) => api.put(`/notifications/${id}/read`),
+  markAllAsRead: () => api.put("/notifications/read-all"),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`),
+  clearRead: () => api.delete("/notifications/read"), // Changed from /clear-read to /read
 };
 
 export default api;

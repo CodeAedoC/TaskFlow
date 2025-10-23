@@ -3,9 +3,11 @@ import { body, validationResult } from "express-validator";
 import Project from "../models/project.models.js";
 import Task from "../models/task.models.js";
 import { authenticate } from "../middleware/auth.middleware.js";
+import { notifyProjectMemberAdded } from "../utils/notifications.utils.js";
 
 const router = express.Router();
 
+// Get all user's projects
 router.get("/", authenticate, async (req, res) => {
   try {
     const projects = await Project.find({
@@ -21,6 +23,7 @@ router.get("/", authenticate, async (req, res) => {
   }
 });
 
+// Get single project with tasks
 router.get("/:id", authenticate, async (req, res) => {
   try {
     const project = await Project.findOne({
@@ -32,7 +35,6 @@ router.get("/:id", authenticate, async (req, res) => {
       return res.status(404).json({ message: "Project not found" });
     }
 
-    // Get tasks for this project
     const tasks = await Task.find({ project: project._id })
       .populate("user assignedTo", "name email")
       .sort({ createdAt: -1 });
@@ -43,6 +45,7 @@ router.get("/:id", authenticate, async (req, res) => {
   }
 });
 
+// Create project
 router.post(
   "/",
   authenticate,
@@ -60,7 +63,7 @@ router.post(
         "#ef4444",
         "#6366f1",
       ]),
-    body("memberIds").optional().isArray(), // NEW: Accept member IDs
+    body("memberIds").optional().isArray(),
   ],
   async (req, res) => {
     try {
@@ -71,10 +74,8 @@ router.post(
 
       const { name, description, color, memberIds } = req.body;
 
-      // Create members array: owner + selected members
-      const members = [req.userId]; // Owner is always a member
+      const members = [req.userId];
       if (memberIds && Array.isArray(memberIds)) {
-        // Add other members, avoiding duplicates
         memberIds.forEach((memberId) => {
           if (!members.includes(memberId)) {
             members.push(memberId);
@@ -92,6 +93,15 @@ router.post(
 
       await project.save();
       await project.populate("owner members", "name email");
+
+      // Notify new members
+      if (memberIds && memberIds.length > 0) {
+        for (const memberId of memberIds) {
+          if (memberId !== req.userId) {
+            await notifyProjectMemberAdded(project, memberId, req.userId);
+          }
+        }
+      }
 
       res.status(201).json(project);
     } catch (error) {
@@ -116,14 +126,12 @@ router.put("/:id", authenticate, async (req, res) => {
 
     const { name, description, color, memberIds } = req.body;
 
-    // Update basic fields
     if (name) project.name = name;
     if (description !== undefined) project.description = description;
     if (color) project.color = color;
 
-    // Update members if provided
     if (memberIds && Array.isArray(memberIds)) {
-      const members = [req.userId]; // Owner is always a member
+      const members = [req.userId];
       memberIds.forEach((memberId) => {
         if (!members.includes(memberId)) {
           members.push(memberId);
@@ -155,7 +163,6 @@ router.delete("/:id", authenticate, async (req, res) => {
         .json({ message: "Project not found or unauthorized" });
     }
 
-    // Remove project from all tasks
     await Task.updateMany(
       { project: project._id },
       { $unset: { project: "" } }
@@ -186,6 +193,9 @@ router.post("/:id/members", authenticate, async (req, res) => {
     if (!project.members.includes(userId)) {
       project.members.push(userId);
       await project.save();
+
+      // Notify the new member
+      await notifyProjectMemberAdded(project, userId, req.userId);
     }
 
     await project.populate("owner members", "name email");

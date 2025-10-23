@@ -9,6 +9,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AuthProvider } from "./context/AuthContext";
 import { ProjectProvider } from "./context/ProjectContext";
 import { TaskProvider } from "./context/TaskContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import Dashboard from "./components/Dashboard/Dashboard";
@@ -26,11 +27,13 @@ function App() {
             path="/dashboard"
             element={
               <PrivateRoute>
-                <ProjectProvider>
-                  <TaskProvider>
-                    <Dashboard />
-                  </TaskProvider>
-                </ProjectProvider>
+                <NotificationProvider>
+                  <ProjectProvider>
+                    <TaskProvider>
+                      <Dashboard />
+                    </TaskProvider>
+                  </ProjectProvider>
+                </NotificationProvider>
               </PrivateRoute>
             }
           />

@@ -8,10 +8,11 @@ import TaskList from "../Tasks/TaskList";
 import TaskForm from "../Tasks/TaskForm";
 import TaskFilter from "../Tasks/TaskFilter";
 import Statistics from "./Statistics";
+import NotificationBell from "../Notifications/NotificationBell";
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const { statistics, projectStatistics } = useTask(); // UPDATED
+  const { statistics, projectStatistics } = useTask();
   const { selectedProject } = useProject();
   const navigate = useNavigate();
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -65,6 +66,9 @@ function Dashboard() {
 
               {/* User Menu */}
               <div className="flex items-center gap-4">
+                {/* NEW: Notification Bell */}
+                <NotificationBell />
+
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-white">{user?.name}</p>
                   <p className="text-xs text-slate-400">{user?.email}</p>
@@ -97,7 +101,7 @@ function Dashboard() {
               </p>
             </div>
 
-            {/* Statistics - UPDATED to pass both */}
+            {/* Statistics */}
             <Statistics
               statistics={statistics}
               projectStatistics={projectStatistics}

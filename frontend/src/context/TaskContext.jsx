@@ -4,6 +4,7 @@ import {
   useContext,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { tasksAPI, projectsAPI } from "../services/api";
 import socketService from "../services/socket";
@@ -28,13 +29,28 @@ export const TaskProvider = ({ children }) => {
     priority: "",
     search: "",
     project: "",
-    assignedUser: "", // CHANGED from createdBy
+    assignedUser: "",
   });
+
+  const listenersAttached = useRef(false);
 
   const fetchTasks = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await tasksAPI.getTasks(filters);
+
+      // Build clean filters (remove empty values)
+      const cleanFilters = {};
+      if (filters.status) cleanFilters.status = filters.status;
+      if (filters.priority) cleanFilters.priority = filters.priority;
+      if (filters.search) cleanFilters.search = filters.search;
+      if (filters.project) cleanFilters.project = filters.project;
+      if (filters.assignedUser)
+        cleanFilters.assignedUser = filters.assignedUser;
+
+      console.log("🔍 Fetching tasks with filters:", cleanFilters);
+
+      const response = await tasksAPI.getTasks(cleanFilters);
+      console.log("✅ Received", response.data.length, "tasks");
       setTasks(response.data);
     } catch (error) {
       console.error("Failed to fetch tasks:", error);
@@ -66,14 +82,12 @@ export const TaskProvider = ({ children }) => {
     }
   }, []);
 
-  // NEW: Fetch filtered statistics
   const fetchFilteredStatistics = useCallback(async () => {
     if (!filters.project && !filters.assignedUser) {
       return;
     }
 
     try {
-      // Calculate statistics from filtered tasks
       const total = tasks.length;
       const completed = tasks.filter((t) => t.status === "completed").length;
       const inProgress = tasks.filter((t) => t.status === "in-progress").length;
@@ -97,7 +111,6 @@ export const TaskProvider = ({ children }) => {
   useEffect(() => {
     fetchTasks();
 
-    // Fetch base statistics
     if (!filters.assignedUser) {
       fetchStatistics();
       if (filters.project) {
@@ -113,23 +126,39 @@ export const TaskProvider = ({ children }) => {
     filters.assignedUser,
   ]);
 
-  // Update statistics when tasks or filters change
   useEffect(() => {
     if (filters.assignedUser) {
       fetchFilteredStatistics();
     }
   }, [tasks, filters.assignedUser, fetchFilteredStatistics]);
 
+  // FIXED: Socket listeners with proper cleanup
   useEffect(() => {
-    socketService.onTaskCreated((task) => {
-      setTasks((prev) => [task, ...prev]);
+    if (!socketService.socket || listenersAttached.current) {
+      return;
+    }
+
+    console.log("🎧 Attaching task socket listeners");
+
+    const handleTaskCreated = (task) => {
+      console.log("📥 Task created via socket:", task._id);
+      setTasks((prev) => {
+        // Prevent duplicates
+        const exists = prev.find((t) => t._id === task._id);
+        if (exists) {
+          console.log("⚠️ Duplicate task prevented");
+          return prev;
+        }
+        return [task, ...prev];
+      });
       fetchStatistics();
       if (filters.project) {
         fetchProjectStatistics(filters.project);
       }
-    });
+    };
 
-    socketService.onTaskUpdated((updatedTask) => {
+    const handleTaskUpdated = (updatedTask) => {
+      console.log("📝 Task updated via socket:", updatedTask._id);
       setTasks((prev) =>
         prev.map((task) => (task._id === updatedTask._id ? updatedTask : task))
       );
@@ -137,22 +166,54 @@ export const TaskProvider = ({ children }) => {
       if (filters.project) {
         fetchProjectStatistics(filters.project);
       }
-    });
+    };
 
-    socketService.onTaskDeleted((taskId) => {
+    const handleTaskDeleted = (taskId) => {
+      console.log("🗑️ Task deleted via socket:", taskId);
       setTasks((prev) => prev.filter((task) => task._id !== taskId));
       fetchStatistics();
       if (filters.project) {
         fetchProjectStatistics(filters.project);
       }
-    });
+    };
+
+    // Remove any existing listeners first
+    socketService.socket.off("task:created");
+    socketService.socket.off("task:updated");
+    socketService.socket.off("task:deleted");
+
+    // Add new listeners
+    socketService.socket.on("task:created", handleTaskCreated);
+    socketService.socket.on("task:updated", handleTaskUpdated);
+    socketService.socket.on("task:deleted", handleTaskDeleted);
+
+    listenersAttached.current = true;
+    console.log("✅ Task socket listeners attached");
+
+    return () => {
+      console.log("🧹 Cleaning up task socket listeners");
+      socketService.socket?.off("task:created", handleTaskCreated);
+      socketService.socket?.off("task:updated", handleTaskUpdated);
+      socketService.socket?.off("task:deleted", handleTaskDeleted);
+      listenersAttached.current = false;
+    };
   }, [filters.project, fetchProjectStatistics]);
 
   const createTask = async (taskData) => {
     try {
       const response = await tasksAPI.createTask(taskData);
-      setTasks((prev) => [response.data, ...prev]);
+
+      // Add to local state immediately
+      setTasks((prev) => {
+        // Check if already exists (shouldn't, but just in case)
+        const exists = prev.find((t) => t._id === response.data._id);
+        if (exists) return prev;
+        return [response.data, ...prev];
+      });
+
+      // Emit to socket for other users
       socketService.emitTaskCreated(response.data);
+
       fetchStatistics();
       if (filters.project) {
         fetchProjectStatistics(filters.project);

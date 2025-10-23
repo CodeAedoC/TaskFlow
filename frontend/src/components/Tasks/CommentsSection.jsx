@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { commentsAPI } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import socketService from "../../services/socket";
@@ -12,36 +12,69 @@ function CommentsSection({ taskId }) {
   const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editContent, setEditContent] = useState("");
-
-  useEffect(() => {
-    fetchComments();
-
-    // Real-time updates
-    socketService.onCommentCreated((comment) => {
-      if (comment.task === taskId) {
-        setComments((prev) => [comment, ...prev]);
-      }
-    });
-
-    socketService.onCommentUpdated((updatedComment) => {
-      setComments((prev) =>
-        prev.map((c) => (c._id === updatedComment._id ? updatedComment : c))
-      );
-    });
-
-    socketService.onCommentDeleted((commentId) => {
-      setComments((prev) => prev.filter((c) => c._id !== commentId));
-    });
-  }, [taskId]);
+  const hasInitialFetch = useRef(false);
 
   const fetchComments = async () => {
+    if (!taskId) return;
+
     try {
       const response = await commentsAPI.getComments(taskId);
       setComments(response.data);
+      hasInitialFetch.current = true;
     } catch (error) {
       console.error("Failed to fetch comments:", error);
     }
   };
+
+  // Initial fetch
+  useEffect(() => {
+    if (taskId && !hasInitialFetch.current) {
+      fetchComments();
+    }
+  }, [taskId]);
+
+  // FIXED: Clean socket listeners
+  useEffect(() => {
+    if (!taskId || !socketService.socket) return;
+
+    const handleCommentCreated = (comment) => {
+      if (comment.task === taskId) {
+        setComments((prev) => {
+          // Prevent duplicates
+          const exists = prev.find((c) => c._id === comment._id);
+          if (exists) return prev;
+          return [comment, ...prev];
+        });
+      }
+    };
+
+    const handleCommentUpdated = (updatedComment) => {
+      setComments((prev) =>
+        prev.map((c) => (c._id === updatedComment._id ? updatedComment : c))
+      );
+    };
+
+    const handleCommentDeleted = (commentId) => {
+      setComments((prev) => prev.filter((c) => c._id !== commentId));
+    };
+
+    // Remove existing listeners first
+    socketService.socket.off("comment:created");
+    socketService.socket.off("comment:updated");
+    socketService.socket.off("comment:deleted");
+
+    // Add new listeners
+    socketService.socket.on("comment:created", handleCommentCreated);
+    socketService.socket.on("comment:updated", handleCommentUpdated);
+    socketService.socket.on("comment:deleted", handleCommentDeleted);
+
+    // Cleanup on unmount
+    return () => {
+      socketService.socket?.off("comment:created", handleCommentCreated);
+      socketService.socket?.off("comment:updated", handleCommentUpdated);
+      socketService.socket?.off("comment:deleted", handleCommentDeleted);
+    };
+  }, [taskId]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,8 +86,13 @@ function CommentsSection({ taskId }) {
         content: newComment,
         task: taskId,
       });
+
+      // Add to local state immediately
       setComments((prev) => [response.data, ...prev]);
+
+      // Emit to socket for other users
       socketService.emitCommentCreated(response.data);
+
       setNewComment("");
     } catch (error) {
       console.error("Failed to create comment:", error);
@@ -194,7 +232,7 @@ function CommentsSection({ taskId }) {
                 </div>
 
                 {/* Actions (only for comment owner) */}
-                {comment.user?._id === user?._id &&
+                {comment.user?._id?.toString() === user?._id?.toString() &&
                   editingId !== comment._id && (
                     <div className="flex gap-1">
                       <button
@@ -244,7 +282,7 @@ function CommentsSection({ taskId }) {
         )}
       </div>
     </div>
-  )
+  );
 }
 
 export default CommentsSection;

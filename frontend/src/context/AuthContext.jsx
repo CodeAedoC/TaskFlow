@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // ADDED: Load user on mount if token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -24,6 +25,17 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     }
   }, []);
+
+  // Connect socket when user is set
+  useEffect(() => {
+    if (user) {
+      if (!socketService.socket?.connected) {
+        socketService.connect(user._id);
+      }
+    } else {
+      socketService.disconnect();
+    }
+  }, [user]);
 
   const loadUser = async () => {
     try {
