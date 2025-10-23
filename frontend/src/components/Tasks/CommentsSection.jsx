@@ -3,6 +3,7 @@ import { commentsAPI } from "../../services/api";
 import { useAuth } from "../../context/AuthContext";
 import socketService from "../../services/socket";
 import { formatDistanceToNow } from "date-fns";
+import UserAvatar from "../Common/UserAvatar";
 
 function CommentsSection({ taskId }) {
   const { user } = useAuth();
@@ -146,9 +147,7 @@ function CommentsSection({ taskId }) {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-emerald-500 rounded-full flex items-center justify-center text-white text-sm font-semibold">
-                      {comment.user?.name?.charAt(0).toUpperCase()}
-                    </div>
+                    <UserAvatar user={comment.user} size="sm" />
                     <div>
                       <p className="text-sm font-semibold text-white">
                         {comment.user?.name}
@@ -245,7 +244,7 @@ function CommentsSection({ taskId }) {
         )}
       </div>
     </div>
-  );
+  )
 }
 
 export default CommentsSection;

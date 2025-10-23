@@ -11,7 +11,7 @@ import Statistics from "./Statistics";
 
 function Dashboard() {
   const { user, logout } = useAuth();
-  const { statistics } = useTask();
+  const { statistics, projectStatistics } = useTask(); // UPDATED
   const { selectedProject } = useProject();
   const navigate = useNavigate();
   const [showTaskForm, setShowTaskForm] = useState(false);
@@ -23,8 +23,12 @@ function Dashboard() {
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
+      {/* Sidebar */}
       <Sidebar />
+
+      {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
         <header className="bg-slate-900/50 backdrop-blur-sm border-b border-slate-800 sticky top-0 z-40">
           <div className="px-6 lg:px-8">
             <div className="flex items-center justify-between h-16">
@@ -59,6 +63,7 @@ function Dashboard() {
                 </div>
               </div>
 
+              {/* User Menu */}
               <div className="flex items-center gap-4">
                 <div className="hidden sm:block text-right">
                   <p className="text-sm font-medium text-white">{user?.name}</p>
@@ -75,8 +80,10 @@ function Dashboard() {
           </div>
         </header>
 
+        {/* Main Content Area */}
         <main className="flex-1 overflow-auto">
           <div className="max-w-7xl mx-auto px-6 lg:px-8 py-8">
+            {/* Welcome Section */}
             <div className="mb-8">
               <h2 className="text-3xl font-bold text-white mb-2">
                 {selectedProject
@@ -90,8 +97,13 @@ function Dashboard() {
               </p>
             </div>
 
-            <Statistics statistics={statistics} />
+            {/* Statistics - UPDATED to pass both */}
+            <Statistics
+              statistics={statistics}
+              projectStatistics={projectStatistics}
+            />
 
+            {/* Actions Bar */}
             <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between mb-6">
               <TaskFilter />
 
@@ -116,11 +128,13 @@ function Dashboard() {
               </button>
             </div>
 
+            {/* Task List */}
             <TaskList />
           </div>
         </main>
       </div>
 
+      {/* Task Form Modal */}
       {showTaskForm && <TaskForm onClose={() => setShowTaskForm(false)} />}
     </div>
   );

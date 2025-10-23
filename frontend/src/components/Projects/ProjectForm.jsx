@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useProject } from "../../context/ProjectContext";
+import { authAPI } from "../../services/api";
+import UserAvatar from "../Common/UserAvatar";
 
 const COLORS = [
   { value: "#14b8a6", name: "Teal" },
@@ -18,9 +20,14 @@ function ProjectForm({ project, onClose }) {
     name: "",
     description: "",
     color: "#14b8a6",
+    members: [], // NEW: Members array
   });
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const searchRef = useRef(null);
 
   useEffect(() => {
     if (project) {
@@ -28,9 +35,63 @@ function ProjectForm({ project, onClose }) {
         name: project.name,
         description: project.description || "",
         color: project.color,
+        members: project.members || [],
       });
     }
   }, [project]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Search users
+  useEffect(() => {
+    const searchUsers = async () => {
+      if (searchQuery.length < 2) {
+        setSearchResults([]);
+        return;
+      }
+
+      try {
+        const response = await authAPI.searchUsers(searchQuery);
+        // Filter out already added members
+        const filtered = response.data.filter(
+          (user) => !formData.members.some((m) => m._id === user._id)
+        );
+        setSearchResults(filtered);
+      } catch (error) {
+        console.error("Failed to search users:", error);
+      }
+    };
+
+    const debounce = setTimeout(searchUsers, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery, formData.members]);
+
+  const handleAddMember = (user) => {
+    setFormData({
+      ...formData,
+      members: [...formData.members, user],
+    });
+    setSearchQuery("");
+    setSearchResults([]);
+    setIsSearchOpen(false);
+  };
+
+  const handleRemoveMember = (userId) => {
+    setFormData({
+      ...formData,
+      members: formData.members.filter((m) => m._id !== userId),
+    });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,10 +99,18 @@ function ProjectForm({ project, onClose }) {
     setLoading(true);
 
     try {
+      // Convert members to array of IDs for backend
+      const submitData = {
+        name: formData.name,
+        description: formData.description,
+        color: formData.color,
+        memberIds: formData.members.map((m) => m._id), // Send IDs only
+      };
+
       if (project) {
-        await updateProject(project._id, formData);
+        await updateProject(project._id, submitData);
       } else {
-        await createProject(formData);
+        await createProject(submitData);
       }
       onClose();
     } catch (err) {
@@ -53,7 +122,8 @@ function ProjectForm({ project, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 animate-slide-up">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">
             {project ? "Edit Project" : "Create New Project"}
@@ -78,14 +148,16 @@ function ProjectForm({ project, onClose }) {
           </button>
         </div>
 
+        {/* Error */}
         {error && (
           <div className="mb-4 bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-
+          {/* Project Name */}
           <div>
             <label
               htmlFor="name"
@@ -106,6 +178,7 @@ function ProjectForm({ project, onClose }) {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label
               htmlFor="description"
@@ -125,6 +198,7 @@ function ProjectForm({ project, onClose }) {
             />
           </div>
 
+          {/* Color Picker */}
           <div>
             <label className="block text-sm font-semibold text-slate-300 mb-3">
               Project Color
@@ -149,6 +223,134 @@ function ProjectForm({ project, onClose }) {
             </div>
           </div>
 
+          {/* NEW: Add Members Section */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-2">
+              Add Team Members
+              <span className="text-slate-500 text-xs font-normal ml-2">
+                (optional)
+              </span>
+            </label>
+
+            {/* Selected Members */}
+            {formData.members.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {formData.members.map((member) => (
+                  <div
+                    key={member._id}
+                    className="flex items-center gap-2 px-3 py-2 bg-teal-500/10 border border-teal-500/20 rounded-lg"
+                  >
+                    <UserAvatar user={member} size="sm" showTooltip={false} />
+                    <span className="text-white text-sm font-medium">
+                      {member.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(member._id)}
+                      className="text-slate-400 hover:text-red-400 transition-colors"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Search Input */}
+            <div className="relative" ref={searchRef}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setIsSearchOpen(true);
+                }}
+                onFocus={() => setIsSearchOpen(true)}
+                placeholder="Search users to add..."
+                className="w-full px-4 py-3 pl-10 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all"
+              />
+              <svg
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+
+              {/* Search Results Dropdown */}
+              {isSearchOpen && searchQuery.length >= 2 && (
+                <div className="absolute z-10 w-full mt-2 bg-slate-800 border border-slate-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <div className="p-4 text-center text-slate-400 text-sm">
+                      No users found
+                    </div>
+                  ) : (
+                    <div className="py-1">
+                      {searchResults.map((user) => (
+                        <button
+                          key={user._id}
+                          type="button"
+                          onClick={() => handleAddMember(user)}
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-slate-700/50 transition-colors text-left"
+                        >
+                          <UserAvatar
+                            user={user}
+                            size="sm"
+                            showTooltip={false}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-sm font-medium truncate">
+                              {user.name}
+                            </p>
+                            <p className="text-slate-400 text-xs truncate">
+                              {user.email}
+                            </p>
+                          </div>
+                          <svg
+                            className="w-5 h-5 text-teal-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 4v16m8-8H4"
+                            />
+                          </svg>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <p className="text-xs text-slate-500 mt-2">
+              You'll be added as project owner automatically
+            </p>
+          </div>
+
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

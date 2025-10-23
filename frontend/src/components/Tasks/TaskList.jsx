@@ -20,7 +20,8 @@ function TaskList() {
     );
   }
 
-  if (tasks.length === 0) {
+  // FIXED: Check if tasks array exists and has length
+  if (!tasks || tasks.length === 0) {
     return (
       <div className="bg-slate-900/50 border border-slate-800 rounded-xl p-12 text-center">
         <div className="inline-block p-4 bg-slate-800/50 rounded-full mb-4">

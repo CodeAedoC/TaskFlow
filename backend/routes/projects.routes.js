@@ -60,6 +60,7 @@ router.post(
         "#ef4444",
         "#6366f1",
       ]),
+    body("memberIds").optional().isArray(), // NEW: Accept member IDs
   ],
   async (req, res) => {
     try {
@@ -68,10 +69,25 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
+      const { name, description, color, memberIds } = req.body;
+
+      // Create members array: owner + selected members
+      const members = [req.userId]; // Owner is always a member
+      if (memberIds && Array.isArray(memberIds)) {
+        // Add other members, avoiding duplicates
+        memberIds.forEach((memberId) => {
+          if (!members.includes(memberId)) {
+            members.push(memberId);
+          }
+        });
+      }
+
       const project = new Project({
-        ...req.body,
+        name,
+        description,
+        color: color || "#14b8a6",
         owner: req.userId,
-        members: [req.userId],
+        members,
       });
 
       await project.save();
@@ -98,7 +114,24 @@ router.put("/:id", authenticate, async (req, res) => {
         .json({ message: "Project not found or unauthorized" });
     }
 
-    Object.assign(project, req.body);
+    const { name, description, color, memberIds } = req.body;
+
+    // Update basic fields
+    if (name) project.name = name;
+    if (description !== undefined) project.description = description;
+    if (color) project.color = color;
+
+    // Update members if provided
+    if (memberIds && Array.isArray(memberIds)) {
+      const members = [req.userId]; // Owner is always a member
+      memberIds.forEach((memberId) => {
+        if (!members.includes(memberId)) {
+          members.push(memberId);
+        }
+      });
+      project.members = members;
+    }
+
     await project.save();
     await project.populate("owner members", "name email");
 

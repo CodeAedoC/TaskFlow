@@ -1,10 +1,42 @@
+import { useState, useEffect } from "react";
 import { useTask } from "../../context/TaskContext";
+import { useProject } from "../../context/ProjectContext";
+import { projectsAPI } from "../../services/api";
 
 function TaskFilter() {
   const { filters, setFilters } = useTask();
+  const { selectedProject } = useProject();
+  const [projectMembers, setProjectMembers] = useState([]);
+
+  // Fetch project members when project changes
+  useEffect(() => {
+    const fetchProjectMembers = async () => {
+      if (!selectedProject) {
+        setProjectMembers([]);
+        return;
+      }
+
+      try {
+        const response = await projectsAPI.getProject(selectedProject._id);
+        setProjectMembers(response.data.project.members || []);
+      } catch (error) {
+        console.error("Failed to fetch project members:", error);
+      }
+    };
+
+    fetchProjectMembers();
+  }, [selectedProject]);
+
+  // Reset assignedUser filter when project changes
+  useEffect(() => {
+    if (filters.assignedUser) {
+      setFilters({ ...filters, assignedUser: "" });
+    }
+  }, [selectedProject]);
 
   return (
     <div className="flex flex-wrap gap-3">
+      {/* Status Filter */}
       <select
         value={filters.status}
         onChange={(e) => setFilters({ ...filters, status: e.target.value })}
@@ -16,6 +48,7 @@ function TaskFilter() {
         <option value="completed">Completed</option>
       </select>
 
+      {/* Priority Filter */}
       <select
         value={filters.priority}
         onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
@@ -27,6 +60,25 @@ function TaskFilter() {
         <option value="high">High</option>
       </select>
 
+      {/* UPDATED: Assigned User Filter with email */}
+      {selectedProject && projectMembers.length > 0 && (
+        <select
+          value={filters.assignedUser}
+          onChange={(e) =>
+            setFilters({ ...filters, assignedUser: e.target.value })
+          }
+          className="px-4 py-2 bg-slate-900/50 border border-slate-800 rounded-lg text-slate-300 text-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 focus:outline-none transition-all min-w-[200px]"
+        >
+          <option value="">All Members</option>
+          {projectMembers.map((member) => (
+            <option key={member._id} value={member._id}>
+              {member.name} ({member.email})
+            </option>
+          ))}
+        </select>
+      )}
+
+      {/* Search */}
       <div className="relative flex-1 min-w-[200px]">
         <input
           type="text"

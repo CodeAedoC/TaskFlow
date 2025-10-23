@@ -32,6 +32,7 @@ export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
   getCurrentUser: () => api.get("/auth/me"),
+  searchUsers: (query) => api.get("/auth/search", { params: { q: query } }), // NEW
 };
 
 export const tasksAPI = {

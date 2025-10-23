@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useTask } from "../../context/TaskContext";
 import { useProject } from "../../context/ProjectContext";
+import UserSelector from "./UserSelector"; // NEW
 
 function TaskForm({ task, onClose }) {
   const { createTask, updateTask } = useTask();
@@ -12,6 +13,7 @@ function TaskForm({ task, onClose }) {
     priority: "medium",
     dueDate: "",
     project: "",
+    assignedTo: [], // NEW
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,6 +29,7 @@ function TaskForm({ task, onClose }) {
           ? new Date(task.dueDate).toISOString().split("T")[0]
           : "",
         project: task.project?._id || "",
+        assignedTo: task.assignedTo || [], // NEW
       });
     }
   }, [task]);
@@ -37,10 +40,16 @@ function TaskForm({ task, onClose }) {
     setLoading(true);
 
     try {
+      // Convert assignedTo to array of IDs
+      const submitData = {
+        ...formData,
+        assignedTo: formData.assignedTo.map((u) => u._id),
+      };
+
       if (task) {
-        await updateTask(task._id, formData);
+        await updateTask(task._id, submitData);
       } else {
-        await createTask(formData);
+        await createTask(submitData);
       }
       onClose();
     } catch (err) {
@@ -53,6 +62,7 @@ function TaskForm({ task, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 animate-slide-up max-h-[90vh] overflow-y-auto">
+        {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl font-bold text-white">
             {task ? "Edit Task" : "Create New Task"}
@@ -77,13 +87,16 @@ function TaskForm({ task, onClose }) {
           </button>
         </div>
 
+        {/* Error */}
         {error && (
           <div className="mb-4 bg-red-500/10 border border-red-500/50 p-3 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
+        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Title */}
           <div>
             <label
               htmlFor="title"
@@ -104,6 +117,7 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
+          {/* Description */}
           <div>
             <label
               htmlFor="description"
@@ -123,6 +137,7 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
+          {/* Project Selector */}
           <div>
             <label
               htmlFor="project"
@@ -147,6 +162,16 @@ function TaskForm({ task, onClose }) {
             </select>
           </div>
 
+          {/* NEW: User Assignment */}
+          <UserSelector
+            selectedUsers={formData.assignedTo}
+            onChange={(users) =>
+              setFormData({ ...formData, assignedTo: users })
+            }
+            projectId={formData.project} // NEW: Pass project ID
+          />
+
+          {/* Status & Priority */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label
@@ -191,6 +216,7 @@ function TaskForm({ task, onClose }) {
             </div>
           </div>
 
+          {/* Due Date */}
           <div>
             <label
               htmlFor="dueDate"
@@ -209,6 +235,7 @@ function TaskForm({ task, onClose }) {
             />
           </div>
 
+          {/* Buttons */}
           <div className="flex gap-3 pt-4">
             <button
               type="button"

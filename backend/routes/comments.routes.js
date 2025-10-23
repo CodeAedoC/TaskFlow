@@ -10,7 +10,10 @@ router.get("/task/:taskId", authenticate, async (req, res) => {
   try {
     const task = await Task.findOne({
       _id: req.params.taskId,
-      $or: [{ user: req.userId }, { assignedTo: req.userId }],
+      $or: [
+        { user: req.userId },
+        { assignedTo: req.userId }, // Allow assigned users
+      ],
     });
 
     if (!task) {
@@ -48,10 +51,12 @@ router.post(
 
       const { content, task } = req.body;
 
-      // Verify task exists and user has access
       const taskExists = await Task.findOne({
         _id: task,
-        $or: [{ user: req.userId }, { assignedTo: req.userId }],
+        $or: [
+          { user: req.userId },
+          { assignedTo: req.userId }, // Allow assigned users
+        ],
       });
 
       if (!taskExists) {
