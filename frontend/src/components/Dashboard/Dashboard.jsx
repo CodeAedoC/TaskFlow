@@ -5,6 +5,7 @@ import { useProject } from "../../context/ProjectContext";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../Layout/Sidebar";
 import TaskList from "../Tasks/TaskList";
+import KanbanBoard from "../Tasks/KanbanBoard";
 import TaskForm from "../Tasks/TaskForm";
 import TaskFilter from "../Tasks/TaskFilter";
 import Statistics from "./Statistics";
@@ -16,6 +17,7 @@ function Dashboard() {
   const { selectedProject } = useProject();
   const navigate = useNavigate();
   const [showTaskForm, setShowTaskForm] = useState(false);
+  const [viewMode, setViewMode] = useState("list"); // default view
 
   const handleLogout = () => {
     logout();
@@ -132,8 +134,32 @@ function Dashboard() {
               </button>
             </div>
 
-            {/* Task List */}
-            <TaskList />
+            {/* Task Views */}
+            <div className="mb-6 flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setViewMode("list")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === "list"
+                    ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/30"
+                    : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                List View
+              </button>
+
+              <button
+                onClick={() => setViewMode("kanban")}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  viewMode === "kanban"
+                    ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-lg shadow-teal-500/30"
+                    : "bg-slate-800 text-slate-400 hover:text-white"
+                }`}
+              >
+                Kanban View
+              </button>
+            </div>
+
+            {viewMode === "list" ? <TaskList /> : <KanbanBoard />}
           </div>
         </main>
       </div>
