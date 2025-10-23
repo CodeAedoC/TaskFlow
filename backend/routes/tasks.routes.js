@@ -264,93 +264,150 @@ router.post(
   }
 );
 
-// UPDATE TASK
-router.put("/:id", authenticate, async (req, res) => {
+// UPDATE TASK - FIXED authorization
+router.put('/:id',
+  authenticate,
+  [
+    body('title').optional().trim().notEmpty(),
+    body('status').optional().isIn(['pending', 'in-progress', 'completed']),
+    body('priority').optional().isIn(['low', 'medium', 'high']),
+    body('assignedTo').optional().isArray()
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const task = await Task.findById(req.params.id);
+      
+      if (!task) {
+        return res.status(404).json({ message: 'Task not found' });
+      }
+
+      // Check if user has access to this task
+      const hasDirectAccess = 
+        task.user.toString() === req.userId ||
+        task.assignedTo?.some(userId => userId.toString() === req.userId);
+
+      // If no direct access, check if user is in the task's project
+      if (!hasDirectAccess && task.project) {
+        const project = await Project.findOne({
+          _id: task.project,
+          $or: [
+            { owner: req.userId },
+            { members: req.userId }
+          ]
+        });
+
+        if (!project) {
+          return res.status(403).json({ message: 'Not authorized to update this task' });
+        }
+      } else if (!hasDirectAccess && !task.project) {
+        return res.status(403).json({ message: 'Not authorized to update this task' });
+      }
+
+      // Validate assignedTo users are in project if project exists
+      if (req.body.project && req.body.assignedTo?.length > 0) {
+        const project = await Project.findById(req.body.project);
+        
+        if (!project) {
+          return res.status(404).json({ message: 'Project not found' });
+        }
+
+        const invalidUsers = req.body.assignedTo.filter(
+          userId => !project.members.some(memberId => memberId.toString() === userId)
+        );
+
+        if (invalidUsers.length > 0) {
+          return res.status(400).json({ 
+            message: 'Some users are not members of this project' 
+          });
+        }
+      }
+
+      // Track old assigned users for notifications
+      const oldAssignedUsers = task.assignedTo || [];
+      
+      // Update task
+      Object.assign(task, req.body);
+      await task.save();
+      
+      await task.populate('project', 'name color');
+      await task.populate('user', 'name email');
+      await task.populate('assignedTo', 'name email');
+
+      // Send notifications for new assignments
+      if (req.body.assignedTo) {
+        const newAssignedUsers = req.body.assignedTo.filter(
+          userId => !oldAssignedUsers.some(oldId => oldId.toString() === userId)
+        );
+
+        if (newAssignedUsers.length > 0) {
+          await notifyTaskAssignment(task, newAssignedUsers, req.userId);
+        }
+      }
+
+      res.json(task);
+    } catch (error) {
+      console.error('Update task error:', error);
+      res.status(500).json({ message: 'Server error', error: error.message });
+    }
+  }
+);
+
+
+// DELETE TASK - FIXED authorization
+router.delete('/:id', authenticate, async (req, res) => {
   try {
-    const task = await Task.findOne({
-      _id: req.params.id,
-      $or: [{ user: req.userId }, { assignedTo: req.userId }],
-    });
+    const task = await Task.findById(req.params.id);
 
     if (!task) {
-      return res.status(404).json({ message: "Task not found" });
+      return res.status(404).json({ message: 'Task not found' });
     }
 
-    if (req.body.assignedTo && task.user.toString() !== req.userId) {
-      return res.status(403).json({ message: "Only task owner can reassign" });
-    }
+    // Check if user has access to this task
+    const hasDirectAccess = 
+      task.user.toString() === req.userId ||
+      task.assignedTo?.some(userId => userId.toString() === req.userId);
 
-    if (req.body.project && req.body.assignedTo?.length > 0) {
-      const project = await Project.findById(req.body.project);
+    // If no direct access, check if user is in the task's project
+    if (!hasDirectAccess && task.project) {
+      const project = await Project.findOne({
+        _id: task.project,
+        $or: [
+          { owner: req.userId },
+          { members: req.userId }
+        ]
+      });
 
       if (!project) {
-        return res.status(404).json({ message: "Project not found" });
+        return res.status(403).json({ message: 'Not authorized to delete this task' });
       }
-
-      const invalidUsers = req.body.assignedTo.filter(
-        (userId) =>
-          !project.members.some((memberId) => memberId.toString() === userId)
-      );
-
-      if (invalidUsers.length > 0) {
-        return res.status(400).json({
-          message:
-            "Some users are not members of this project. Add them to the project first.",
-        });
-      }
+    } else if (!hasDirectAccess && !task.project) {
+      return res.status(403).json({ message: 'Not authorized to delete this task' });
     }
 
-    const oldAssignedUsers = task.assignedTo.map((id) => id.toString());
-
-    Object.assign(task, req.body);
-    await task.save();
-    await task.populate("project", "name color");
-    await task.populate("user", "name email");
-    await task.populate("assignedTo", "name email");
-
-    // Notify newly assigned users
-    if (req.body.assignedTo) {
-      const newAssignedUsers = req.body.assignedTo.filter(
-        (userId) => !oldAssignedUsers.includes(userId.toString())
-      );
-
-      if (newAssignedUsers.length > 0) {
-        await notifyTaskAssignment(task, newAssignedUsers, req.userId);
-      }
+    // Only task creator can delete (even if they're a project member)
+    if (task.user.toString() !== req.userId) {
+      return res.status(403).json({ message: 'Only task creator can delete this task' });
     }
 
-    // Notify all involved users about update
-    if (task.assignedTo && task.assignedTo.length > 0) {
-      const recipients = [...task.assignedTo.map((u) => u._id), task.user._id];
-      await notifyTaskUpdate(task, req.userId, recipients);
-    }
+    await Task.findByIdAndDelete(req.params.id);
+    
+    // Delete associated comments
+    await Comment.deleteMany({ task: req.params.id });
+    
+    // Delete associated notifications
+    await Notification.deleteMany({ relatedTask: req.params.id });
 
-    res.json(task);
+    res.json({ message: 'Task deleted successfully' });
   } catch (error) {
-    console.error("Update task error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    console.error('Delete task error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// DELETE TASK
-router.delete("/:id", authenticate, async (req, res) => {
-  try {
-    const task = await Task.findOneAndDelete({
-      _id: req.params.id,
-      user: req.userId,
-    });
-
-    if (!task) {
-      return res
-        .status(404)
-        .json({ message: "Task not found or unauthorized" });
-    }
-
-    res.json({ message: "Task deleted successfully" });
-  } catch (error) {
-    console.error("Delete task error:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
-  }
-});
 
 export default router;
