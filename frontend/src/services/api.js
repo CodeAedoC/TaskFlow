@@ -74,4 +74,15 @@ export const notificationsAPI = {
   clearRead: () => api.delete("/notifications/read"), // Changed from /clear-read to /read
 };
 
+export async function reorderTasks(taskIds, status) {
+  return fetch("/api/tasks/reorder", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ taskIds, status }),
+  }).then((res) => res.json());
+}
+
 export default api;

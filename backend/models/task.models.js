@@ -34,6 +34,7 @@ const taskSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    position: { type: Number, default: 0 },
     assignedTo: [
       {
         type: mongoose.Schema.Types.ObjectId,

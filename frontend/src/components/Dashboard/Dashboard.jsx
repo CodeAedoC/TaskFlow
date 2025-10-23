@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useTask } from "../../context/TaskContext";
 import { useProject } from "../../context/ProjectContext";
@@ -17,7 +17,14 @@ function Dashboard() {
   const { selectedProject } = useProject();
   const navigate = useNavigate();
   const [showTaskForm, setShowTaskForm] = useState(false);
-  const [viewMode, setViewMode] = useState("list"); // default view
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem("viewMode") || "list";
+  });
+
+  useEffect(() => {
+    localStorage.setItem("viewMode", viewMode);
+  }, [viewMode]);
+
 
   const handleLogout = () => {
     logout();

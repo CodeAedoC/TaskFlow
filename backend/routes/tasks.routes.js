@@ -264,6 +264,28 @@ router.post(
   }
 );
 
+router.post("/reorder", authenticate, async (req, res) => {
+  const { taskIds, status } = req.body;
+  if (!Array.isArray(taskIds) || typeof status !== "string") {
+    return res.status(400).json({ message: "Invalid payload" });
+  }
+  try {
+    // Update all positions in bulk
+    const bulkOps = taskIds.map((id, index) => ({
+      updateOne: {
+        filter: { _id: id },
+        update: { position: index, status },
+      },
+    }));
+    await Task.bulkWrite(bulkOps);
+    res.json({ message: "Tasks reordered successfully" });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Bulk reorder failed", error: error.message });
+  }
+});
+
 // UPDATE TASK - FIXED authorization
 router.put('/:id',
   authenticate,

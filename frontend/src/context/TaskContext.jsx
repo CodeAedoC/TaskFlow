@@ -224,11 +224,11 @@ export const TaskProvider = ({ children }) => {
     }
   };
 
-  const updateTask = async (id, taskData) => {
+  const updateTask = async (id, updatedData) => {
     try {
-      const response = await tasksAPI.updateTask(id, taskData);
-      setTasks((prev) =>
-        prev.map((task) => (task._id === id ? response.data : task))
+      const response = await tasksAPI.updateTask(id, updatedData);
+      setTasks((prevTasks) =>
+        prevTasks.map((task) => (task._id === id ? response.data : task))
       );
       socketService.emitTaskUpdated(response.data);
       fetchStatistics();
@@ -259,6 +259,7 @@ export const TaskProvider = ({ children }) => {
     <TaskContext.Provider
       value={{
         tasks,
+        setTasks,
         statistics,
         projectStatistics,
         loading,

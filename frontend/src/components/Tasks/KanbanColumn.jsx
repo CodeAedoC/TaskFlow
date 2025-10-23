@@ -9,7 +9,7 @@ import KanbanCard from "./KanbanCard";
 function KanbanColumn({ id, title, color, tasks }) {
   const { setNodeRef } = useDroppable({ id });
 
-  const colorClasses = {
+  const colors = {
     slate: "border-slate-700 bg-slate-800/30",
     blue: "border-blue-700 bg-blue-900/20",
     green: "border-green-700 bg-green-900/20",
@@ -20,7 +20,7 @@ function KanbanColumn({ id, title, color, tasks }) {
       <motion.div
         whileHover={{ backgroundColor: "rgba(30,41,59,0.4)" }}
         transition={{ duration: 0.2 }}
-        className={`p-4 rounded-xl border-2 min-h-[500px] transition-colors ${colorClasses[color]}`}
+        className={`p-4 rounded-xl border-2 min-h-[500px] transition-colors ${colors[color]}`}
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-white font-semibold">{title}</h2>

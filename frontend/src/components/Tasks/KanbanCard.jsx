@@ -30,7 +30,7 @@ function KanbanCard({ task, isDragging = false }) {
         layout: { type: "spring", stiffness: 400, damping: 30 },
         opacity: { duration: 0.2 },
       }}
-      className="bg-slate-800/60 hover:bg-slate-800 
+      className="bg-slate-800/60 hover:bg-slate-800
                  transition-colors rounded-lg p-4 cursor-grab 
                  active:cursor-grabbing shadow-lg shadow-slate-900/30"
     >
