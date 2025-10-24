@@ -22,22 +22,23 @@ const app = express();
 const httpServer = createServer(app);
 
 const PORT = process.env.PORT;
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = process.env.MONGO_URI;
 const CLIENT_URL = process.env.CLIENT_URL;
 
 // Add this near the top after other imports
 app.use(helmet());
 
+const allowedOrigins = [
+  "https://codeaedoc.github.io", 
+  "http://localhost:5173", 
+]
+
 // Update CORS configuration
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? process.env.CLIENT_URL
-        : ["http://localhost:5173"],
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
+}));
 
 // Update cors configuration
 const io = new Server(httpServer, {
@@ -45,11 +46,7 @@ const io = new Server(httpServer, {
     origin:
       process.env.NODE_ENV === "production"
         ? process.env.CLIENT_URL
-        : [
-            "http://localhost:5173",
-            "http://localhost:5174",
-            "http://localhost:5175",
-          ],
+        : allowedOrigins,
     credentials: true,
     methods: ["GET", "POST"],
   },
