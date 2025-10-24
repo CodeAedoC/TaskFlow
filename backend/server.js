@@ -1,6 +1,7 @@
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import path from "path";
 import cors from "cors";
 import dotenv from "dotenv";
 import connectDB from "./config/db.js";
@@ -9,17 +10,41 @@ import taskRoutes from "./routes/tasks.routes.js";
 import projectRoutes from "./routes/projects.routes.js";
 import commentRoutes from "./routes/comments.routes.js"; // ← Check this line
 import notificationRoutes from "./routes/notifications.routes.js";
+import { fileURLToPath } from "url";
+import helmet from "helmet";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const httpServer = createServer(app);
 
+const PORT = process.env.PORT;
+const MONGODB_URI = process.env.MONGODB_URI;
+const CLIENT_URL = process.env.CLIENT_URL;
+
+// Add this near the top after other imports
+app.use(helmet());
+
+// Update CORS configuration
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production"
+        ? process.env.CLIENT_URL
+        : ["http://localhost:5173"],
+    credentials: true,
+  })
+);
+
+// Update cors configuration
 const io = new Server(httpServer, {
   cors: {
     origin:
       process.env.NODE_ENV === "production"
-        ? process.env.FRONTEND_URL
+        ? process.env.CLIENT_URL
         : [
             "http://localhost:5173",
             "http://localhost:5174",
@@ -31,7 +56,16 @@ const io = new Server(httpServer, {
   transports: ["websocket", "polling"],
 });
 
-app.use(cors());
+if (process.env.NODE_ENV === "production") {
+  // Serve static files from the frontend build
+  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+  // Handle React routing, return all requests to React app
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/dist", "index.html"));
+  });
+}
+
 app.use(express.json());
 
 connectDB();
@@ -114,16 +148,8 @@ io.on("connection", (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 8080;
-
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📝 Registered routes:`);
-  console.log(`   - /api/auth`);
-  console.log(`   - /api/tasks`);
-  console.log(`   - /api/projects`);
-  console.log(`   - /api/comments`);
-  console.log(`   - /api/notifications`);
 });
 
 export { io };

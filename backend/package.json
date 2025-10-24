@@ -1,8 +1,11 @@
 {
-  "name": "backend",
+  "name": "taskflow-backend",
   "version": "1.0.0",
   "main": "index.js",
   "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "scripts": {
     "dev": "nodemon server.js",
     "start": "node server.js"
