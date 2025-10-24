@@ -31,6 +31,7 @@ app.use(helmet());
 const allowedOrigins = [
   "https://codeaedoc.github.io", 
   "http://localhost:5173", 
+  "https://taskflow-5m27.onrender.com"
 ]
 
 // Update CORS configuration
