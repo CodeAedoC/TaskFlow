@@ -51,7 +51,7 @@ router.post(
 
       await user.save();
 
-      const verificationUrl = `${process.env.CLIENT_URL}/verify-email?token=${verificationToken}`;
+      const verificationUrl = `${process.env.CLIENT_URL}/#/verify-email?token=${verificationToken}`;
 
       try {
         await sendVerificationEmail(user.email, verificationUrl);
