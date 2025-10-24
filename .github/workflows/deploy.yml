@@ -32,7 +32,7 @@ jobs:
           cd frontend
           npm run build
         env:
-          VITE_API_URL: 'https://taskflow-5m27.onrender.com'
+          VITE_API_URL: 'https://taskflow-5m27.onrender.com/api'
           VITE_SOCKET_URL: 'https://taskflow-5m27.onrender.com'
 
       - name: Deploy to GitHub Pages
