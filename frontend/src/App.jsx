@@ -1,5 +1,4 @@
 import {
-  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -19,7 +18,7 @@ import EmailVerification from "./components/Auth/EmailVerification";
 
 function App() {
   return (
-    <Router>
+    <>
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
@@ -59,7 +58,7 @@ function App() {
         pauseOnHover
         theme="dark"
       />
-    </Router>
+    </>
   );
 }
 
