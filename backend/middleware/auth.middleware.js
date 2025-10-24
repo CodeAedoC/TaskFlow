@@ -1,35 +1,32 @@
 import jwt from "jsonwebtoken";
+import User from "../models/user.models.js";
 
 export const authenticate = async (req, res, next) => {
   try {
-    const authHeader = req.header("Authorization");
-    if (!authHeader) {
-      return res.status(401).json({
-        message: "Auth required",
-        correlationId: Date.now().toString(36),
-      });
-    }
-
-    const token = authHeader.startsWith("Bearer ")
-      ? authHeader.slice(7)
-      : authHeader;
-
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    
     if (!token) {
-      return res.status(401).json({
-        message: "Invalid token format",
-        correlationId: Date.now().toString(36),
-      });
+      return res.status(401).json({ message: "No token, authorization denied" });
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    const user = await User.findById(decoded.userId);
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    // Add verification check
+    if (!user.emailVerified) {
+      return res.status(403).json({ 
+        message: "Email verification required",
+        requiresVerification: true
+      });
+    }
+
     req.userId = decoded.userId;
     next();
   } catch (error) {
-    console.error("Auth Error:", error);
-    res.status(401).json({
-      message: "Auth required",
-      error: error.message,
-      correlationId: Date.now().toString(36),
-    });
+    res.status(401).json({ message: "Token is not valid" });
   }
 };

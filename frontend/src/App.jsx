@@ -14,6 +14,8 @@ import Login from "./components/Auth/Login";
 import Register from "./components/Auth/Register";
 import Dashboard from "./components/Dashboard/Dashboard";
 import PrivateRoute from "./components/Layout/PrivateRoute";
+import VerifyEmailNotice from "./components/Auth/VerifyEmailNotice";
+import EmailVerification from "./components/Auth/EmailVerification";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/verify-email-notice" element={<VerifyEmailNotice />} />
+          <Route path="/verify-email" element={<EmailVerification />} />
 
           <Route
             path="/dashboard"

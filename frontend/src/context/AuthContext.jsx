@@ -1,99 +1,96 @@
-import { createContext, useState, useContext, useEffect } from "react";
-import { authAPI } from "../services/api";
-import socketService from "../services/socket";
+import { createContext, useContext, useState, useEffect } from "react";
+import api from "../services/api";
+import { useNavigate } from "react-router-dom";
 
 const AuthContext = createContext();
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
-  return context;
-};
-
 export const AuthProvider = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // ADDED: Load user on mount if token exists
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      loadUser();
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
-  // Connect socket when user is set
-  useEffect(() => {
-    if (user) {
-      if (!socketService.socket?.connected) {
-        socketService.connect(user._id);
+    const initAuth = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+          const response = await api.get("/auth/me");
+          setUser(response.data);
+          setIsAuthenticated(true);
+        } catch (error) {
+          console.error("Auth initialization error:", error);
+          localStorage.removeItem("token");
+          delete api.defaults.headers.common["Authorization"];
+        }
       }
-    } else {
-      socketService.disconnect();
-    }
-  }, [user]);
-
-  const loadUser = async () => {
-    try {
-      const response = await authAPI.getCurrentUser();
-      setUser(response.data);
-      socketService.connect(response.data._id);
-    } catch (error) {
-      console.error("Failed to load user:", error);
-      localStorage.removeItem("token");
-    } finally {
       setLoading(false);
-    }
-  };
+    };
 
-  const register = async (userData) => {
-    try {
-      const response = await authAPI.register(userData);
-      localStorage.setItem("token", response.data.token);
-      setUser(response.data.user);
-      socketService.connect(response.data.user.id);
-      return { success: true };
-    } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || "Registration failed",
-      };
-    }
-  };
+    initAuth();
+  }, []);
 
   const login = async (credentials) => {
     try {
-      const response = await authAPI.login(credentials);
-      localStorage.setItem("token", response.data.token);
-      setUser(response.data.user);
-      socketService.connect(response.data.user.id);
-      return { success: true };
+      console.log("Login request:", credentials);
+      const response = await api.post("/auth/login", credentials);
+      console.log("Login response:", response.data);
+
+      const { token, user } = response.data;
+
+      if (token && user) {
+        localStorage.setItem("token", token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        setUser(user);
+        setIsAuthenticated(true);
+        return { user };
+      }
+
+      throw new Error("Invalid response from server");
     } catch (error) {
-      return {
-        success: false,
-        error: error.response?.data?.message || "Login failed",
-      };
+      console.error("Login error:", error);
+      throw error.response?.data || { message: "Failed to login" };
     }
   };
 
   const logout = () => {
     localStorage.removeItem("token");
+    delete api.defaults.headers.common["Authorization"];
     setUser(null);
-    socketService.disconnect();
+    setIsAuthenticated(false);
+  };
+
+  const register = async (userData) => {
+    try {
+      const response = await api.post("/auth/register", userData);
+      console.log("Registration response:", response.data);
+
+      return response.data;
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error.response?.data || { message: "Registration failed" };
+    }
   };
 
   const value = {
+    isAuthenticated,
     user,
     loading,
-    register,
     login,
     logout,
-    isAuthenticated: !!user,
+    register,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
+
+export default AuthProvider;

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function Register() {
+const Register = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -12,6 +12,7 @@ function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
 
   const { register } = useAuth();
   const navigate = useNavigate();
@@ -46,20 +47,60 @@ function Register() {
       return;
     }
 
-    const result = await register({
-      name: formData.name,
-      email: formData.email,
-      password: formData.password,
-    });
-
-    if (result.success) {
-      navigate("/dashboard");
-    } else {
-      setError(result.error);
+    try {
+      await register(formData);
+      setRegistrationSuccess(true);
+      setLoading(false);
+    } catch (error) {
+      setError(error.message);
+      setLoading(false);
     }
-
-    setLoading(false);
   };
+
+  if (registrationSuccess) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900/50 p-8 rounded-2xl border border-slate-800">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                className="w-8 h-8 text-emerald-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              Check your email
+            </h2>
+            <p className="text-slate-400">
+              We've sent a verification link to{" "}
+              <span className="text-white font-medium">{formData.email}</span>
+            </p>
+          </div>
+          <div className="space-y-4">
+            <p className="text-sm text-slate-400 text-center">
+              Please click the link in your email to verify your account. If you
+              don't see it, check your spam folder.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="w-full bg-slate-800 text-white font-medium py-3 rounded-xl hover:bg-slate-700 transition-colors"
+            >
+              Resend verification email
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-950 flex">
@@ -350,6 +391,6 @@ function Register() {
       </div>
     </div>
   );
-}
+};
 
 export default Register;

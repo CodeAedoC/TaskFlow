@@ -1,21 +1,25 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
-function PrivateRoute({ children }) {
-  const { user, loading } = useAuth();
+const PrivateRoute = ({ children }) => {
+  const { isAuthenticated, loading, user } = useAuth();
+  const location = useLocation();
 
   if (loading) {
+    return <div>Loading...</div>; // Or your loading component
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!user?.emailVerified) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading...</p>
-        </div>
-      </div>
+      <Navigate to="/verify-email-notice" state={{ from: location }} replace />
     );
   }
 
-  return user ? children : <Navigate to="/login" />;
-}
+  return children;
+};
 
 export default PrivateRoute;
