@@ -46,6 +46,7 @@ router.post(
 
       // Generate verification token
       const verificationToken = crypto.randomBytes(32).toString("hex");
+      user.emailVerified = true;
       user.emailVerificationToken = verificationToken;
       user.emailVerificationExpires = Date.now() + 24 * 3600 * 1000; // 24 hours
 
@@ -105,6 +106,13 @@ router.post(
       if (!isMatch) {
         console.log("Password mismatch for user:", email);
         return res.status(400).json({ message: "Invalid credentials" });
+      }
+
+      if (!user.emailVerified) {
+        return res.status(403).json({
+          message: "Please verify your email address before logging in",
+          isVerificationError: true,
+        });
       }
 
       const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
